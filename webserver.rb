@@ -8,8 +8,10 @@ post '/emit' do
   channel = conn.create_channel
   exchange = channel.fanout("logs")
 
-  exchange.publish(request.body.read)
-  response.body = " [x] Sent " + request.body.read.to_s
+  message = request.body.read
+
+  exchange.publish(message)
+  response.body = " [x] Sent: " + message
 
   conn.close
 end
@@ -20,3 +22,4 @@ get '/hello/:name' do |n|
   # n stores params['name']
   "Hello #{n}!"
 end
+
