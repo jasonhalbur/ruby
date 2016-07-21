@@ -1,15 +1,15 @@
 require 'sinatra'
 require 'bunny'
 
-get '/emit/:phrase' do |path_params|
+post '/emit' do
   conn = Bunny.new
   conn.start
 
   channel = conn.create_channel
   exchange = channel.fanout("logs")
 
-  exchange.publish(path_params)
-  puts " [x] Sent #{path_params}"
+  exchange.publish(request.body.read)
+  response.body = " [x] Sent " + request.body.read.to_s
 
   conn.close
 end
