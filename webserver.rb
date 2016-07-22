@@ -1,11 +1,17 @@
 require 'sinatra'
 require 'bunny'
 
-post '/emit' do
-  conn = Bunny.new
-  conn.start
+before do
+  @conn = Bunny.new
+  @conn.start
+end
 
-  channel = conn.create_channel
+after do
+  @conn.close
+end
+
+post '/emit' do
+  channel = @conn.create_channel
   exchange = channel.fanout("logs")
 
   message = request.body.read
@@ -13,7 +19,6 @@ post '/emit' do
   exchange.publish(message)
   response.body = " [x] Sent: " + message
 
-  conn.close
 end
 
 get '/hello/:name' do |n|
@@ -22,4 +27,9 @@ get '/hello/:name' do |n|
   # n stores params['name']
   "Hello #{n}!"
 end
+
+
+
+
+
 
