@@ -22,7 +22,7 @@ post '/event' do
 
   parsed_message.each do |data_name, value|
     next if data_name == 'sensor_type'
-    @exchange.publish(value, :headers => {'type' => 'event'}, :routing_key => 'event.DHT11.' + data_name)
+    @exchange.publish(value, :headers => {'type' => 'event'}, :routing_key => 'event.' + sensor_type + '.' + data_name)
   end
 
   status 201
