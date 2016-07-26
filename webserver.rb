@@ -1,32 +1,34 @@
 require 'sinatra'
 require 'bunny'
+require 'json'
 
 before do
   @conn = Bunny.new
   @conn.start
+  channel = @conn.create_channel
+  @exchange = channel.topic('/', :durable => true)
 end
 
 after do
   @conn.close
 end
 
-post '/emit' do
-  channel = @conn.create_channel
-  exchange = channel.fanout("logs")
-
+post '/event' do
   message = request.body.read
+  parsed_message = JSON.parse(message)
+  sensor_type = parsed_message['sensor_type']
 
-  exchange.publish(message)
-  response.body = " [x] Sent: " + message
+  puts ' [x] Received a message from ' + sensor_type + ': ' + message
 
+  parsed_message.each do |data_name, value|
+    next if data_name == 'sensor_type'
+    @exchange.publish(value, :headers => {'type' => 'event'}, :routing_key => 'event.' + sensor_type + '.' + data_name)
+  end
+
+  status 201
 end
 
-get '/hello/:name' do |n|
-  # matches "GET /hello/foo" and "GET /hello/bar"
-  # params['name'] is 'foo' or 'bar'
-  # n stores params['name']
-  "Hello #{n}!"
-end
+
 
 
 
